@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- include "resource.name" . }}
+  labels:
+    {{- include "nginx.labels" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "nginx.labels" . | indent 2}}
+  template:
+    metadata:
+      labels:
+        {{- include "nginx.labels" . | indent 4}}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Release.Name }}-helm-module
+      {{- end }}
+      volumes:
+      - 
+        {{- include "resource.name" . | indent 6 }}
+        configMap:
+          {{- include "resource.name" . | indent 8 }}
+          items:
+          - key: index.html
+            path: index.html
+      containers:
+        - name: testchart
+          image: "nginx:1.16.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          volumeMounts:
+          - 
+            {{- include "resource.name" . | indent 10 }}
+            mountPath: /usr/share/nginx/html
